@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const app = express();
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
+const productsRoutes = require("./routes/products");
 
 // connect to MongoDB
 mongoose
@@ -13,6 +14,7 @@ mongoose
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/products", productsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello world!");
