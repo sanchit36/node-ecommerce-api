@@ -17,33 +17,31 @@ router.post("/", verifyTokenAndAdmin, async (req, res) => {
 
 // Get All Product
 router.get("/", async (req, res) => {
-  console.log(req.query);
   try {
-    const qNew = req.query.new;
-    const qCategory = req.query.category;
-    const qLimit = req.query.limit ? Number(req.query.limit) : 8;
-    const qPage = req.query.page ? Number(req.query.page) : 1;
-    const toSkip = (qPage - 1) * qLimit;
-    let products;
+    let { q, newest, size, category, color, sortBy, limit, page } = req.query;
+    let query = {};
+    let sortObject = {};
+    let qlimit = 8,
+      qpage = 1;
+    let qmax = 50;
 
-    if (qNew) {
-      products = await Product.find()
-        .sort({ createdAt: -1 })
-        .limit(qLimit)
-        .skip(toSkip);
-    } else if (qCategory) {
-      console.log("new and cat");
+    if (q != null && q != "") query["title"] = { $regex: q, $options: "i" };
+    if (size != null && size != "") query["sizes.name"] = { $in: [size] };
+    if (category != null && category != "")
+      query["categories.name"] = { $in: [category] };
+    if (color != null && color != "") query["colors.name"] = { $in: [color] };
+    if (newest == true) sortObject["createdAt"] = -1;
+    if (sortBy == "asc" || sortBy == "desc")
+      sortObject["price"] = sortBy == "asc" ? 1 : -1;
 
-      products = await Product.find({
-        "categories.name": {
-          $in: [qCategory],
-        },
-      })
-        .limit(qLimit)
-        .skip(toSkip);
-    } else {
-      products = await Product.find().limit(qLimit).skip(toSkip);
-    }
+    if (limit != null) qlimit = limit;
+    if (page != null) qpage = page;
+    if (qlimit > qmax) qlimit = qmax;
+
+    const products = await Product.find(query)
+      .sort(sortObject)
+      .limit(qlimit)
+      .skip((qpage - 1) * qlimit);
 
     res.send(products);
   } catch (err) {

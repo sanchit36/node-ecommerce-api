@@ -31,9 +31,19 @@ const ProductSchema = mongoose.Schema(
         },
       },
     ],
+    colors: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true,
+          lowercase: true,
+        },
+      },
+    ],
     sizes: [
       {
-        size: {
+        name: {
           type: String,
           required: true,
         },
