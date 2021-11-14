@@ -12,7 +12,6 @@ router.post("/signup", async (req, res) => {
     const token = await user.generateAuthToken();
     res.status(201).send({ token, user });
   } catch (err) {
-    console.log(err);
     return res.status(400).send(err);
   }
 });
@@ -25,8 +24,8 @@ router.post("/signin", async (req, res) => {
     const token = await user.generateAuthToken();
     res.send({ token, user });
   } catch (err) {
-    console.log(err);
-    return res.status(400).send(err);
+    console.log(err.message);
+    return res.status(400).send({ message: err.message });
   }
 });
 
