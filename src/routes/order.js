@@ -1,6 +1,6 @@
 const verifyToken = require("../middlewares/verifyToken");
 const verifyTokenAndAdmin = require("../middlewares/verifyTokenAndAdmin");
-const verifyTokenAndAuthorization = require("../middlewares/verifyTokenAndAuthorization");
+const verifyTokenAndAuthenticate = require("../middlewares/verifyTokenAndAuthenticate");
 const Order = require("../models/Order");
 const router = require("express").Router();
 
@@ -43,7 +43,7 @@ router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
 });
 
 //GET USER ORDERS
-router.get("/find/:userId", verifyTokenAndAuthorization, async (req, res) => {
+router.get("/find/:userId", verifyTokenAndAuthenticate, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.params.userId });
     res.status(200).json(orders);

@@ -18,7 +18,7 @@ router.post("/", verifyTokenAndAdmin, async (req, res) => {
 // Get All Product
 router.get("/", async (req, res) => {
   try {
-    let { q, newest, size, category, color, sortBy, limit, page } = req.query;
+    let { q, size, category, color, sortBy, limit, page } = req.query;
     let query = {};
     let sortObject = {};
     let qlimit = 8,
@@ -30,9 +30,13 @@ router.get("/", async (req, res) => {
     if (category != null && category != "")
       query["categories.name"] = { $in: [category] };
     if (color != null && color != "") query["colors.name"] = { $in: [color] };
-    if (newest == true) sortObject["createdAt"] = -1;
-    if (sortBy == "asc" || sortBy == "desc")
-      sortObject["price"] = sortBy == "asc" ? 1 : -1;
+    if (sortBy == "asc" || sortBy == "desc" || sortBy == "newest") {
+      if (sortBy == "newest") {
+        sortObject["createdAt"] = -1;
+      } else {
+        sortObject["price"] = sortBy == "asc" ? 1 : -1;
+      }
+    }
 
     if (limit != null) qlimit = limit;
     if (page != null) qpage = page;

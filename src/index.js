@@ -7,6 +7,9 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const productsRoutes = require("./routes/products");
+const cartRoutes = require("./routes/cart");
+const orderRoutes = require("./routes/order");
+const stripeRoutes = require("./routes/stripe");
 
 // connect to MongoDB
 mongoose
@@ -20,6 +23,9 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productsRoutes);
+app.use("/api/carts", cartRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/checkout", stripeRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello world!");
