@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugify = require("slugify");
 
 const ProductSchema = mongoose.Schema(
   {
@@ -10,7 +11,6 @@ const ProductSchema = mongoose.Schema(
     },
     slug: {
       type: String,
-      required: true,
     },
     description: {
       type: String,
@@ -58,6 +58,11 @@ const ProductSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+ProductSchema.pre("save", function (next) {
+  this.slug = slugify(this.title);
+  next();
+});
 
 ProductSchema.methods.toJSON = function () {
   const product = this;
