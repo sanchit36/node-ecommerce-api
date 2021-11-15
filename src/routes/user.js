@@ -16,7 +16,7 @@ router.get("/", verifyTokenAndAdmin, async (req, res) => {
     const toSkip = (qPage - 1) * qLimit;
 
     const users = query
-      ? await User.find().sort({ _id: -1 }).limit(qLimit).skip(toSkip)
+      ? await User.find().sort({ createdAt: -1 }).limit(qLimit).skip(toSkip)
       : await User.find();
 
     res.status(200).json(users);
@@ -72,16 +72,24 @@ router.get("/:id", verifyTokenAndAdmin, async (req, res) => {
 
 // Update User
 router.put("/:id", verifyTokenAndAuthenticate, async (req, res) => {
-  try {
-    if (req.body.password) {
-      req.body.password = await bcrypt.hash(req.body.password, 8);
-    }
-    if (req.body.isAdmin) {
-      if (!req.user.isAdmin) {
-        delete req.body.isAdmin;
-      }
-    }
+  const updates = Object.keys(req.body);
+  const allowedUpdate = [
+    "firstName",
+    "lastName",
+    "email",
+    "username",
+    "password",
+  ];
 
+  const isValidOperation = updates.every((update) => {
+    return allowedUpdate.includes(update);
+  });
+
+  if (!isValidOperation) {
+    return res.status(400).send({ error: "Invalid updates!" });
+  }
+
+  try {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       {

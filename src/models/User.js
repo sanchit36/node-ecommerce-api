@@ -23,6 +23,8 @@ const UserSchema = mongoose.Schema(
     },
     image: {
       type: String,
+      default:
+        "https://crowd-literature.eu/wp-content/uploads/2015/01/no-avatar.gif",
     },
     email: {
       type: String,
@@ -84,7 +86,6 @@ UserSchema.methods.toJSON = function () {
   delete userObject.tokens;
   delete userObject.__v;
   delete userObject._id;
-  delete userObject.isAdmin;
 
   return userObject;
 };
