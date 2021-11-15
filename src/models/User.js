@@ -70,6 +70,12 @@ UserSchema.virtual("fullname").get(function () {
   return this.firstName + " " + this.lastName;
 });
 
+UserSchema.virtual("cart", {
+  ref: "Cart",
+  localField: "_id",
+  foreignField: "user",
+});
+
 UserSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject({ virtuals: true });
@@ -97,7 +103,7 @@ UserSchema.methods.generateAuthToken = async function () {
 };
 
 UserSchema.statics.findByCredentials = async function (email, password) {
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).populate("cart");
 
   if (!user) {
     throw new Error("Invaild email or password");
@@ -116,6 +122,23 @@ UserSchema.pre("save", async function (next) {
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
   }
+  next();
+});
+
+UserSchema.post("save", (error, doc, next) => {
+  if (error?.keyPattern?.username && error.code === 11000) {
+    next(new Error("Username already in use"));
+  } else if (error?.keyPattern?.email && error.code === 11000) {
+    next(new Error("Email already in use"));
+  } else {
+    next(error);
+  }
+});
+
+// Delete user cart when user is removed
+UserSchema.pre("remove", async function (next) {
+  const user = this;
+  await Cart.deleteOne({ user: user._id });
   next();
 });
 
