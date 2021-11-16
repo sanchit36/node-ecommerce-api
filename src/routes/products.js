@@ -42,13 +42,22 @@ router.get("/", async (req, res) => {
     if (page != null) qpage = page;
     if (qlimit > qmax) qlimit = qmax;
 
-    const products = await Product.find(query)
+    let schema = Product.find(query);
+    let c = schema.toConstructor();
+
+    const count = await schema.count();
+    const totalPages = Math.ceil(count / qlimit);
+    const hasNext = qpage < totalPages;
+    const hasPrev = qpage > 1;
+
+    const products = await c()
       .sort(sortObject)
       .limit(qlimit)
       .skip((qpage - 1) * qlimit);
 
-    res.send(products);
+    res.send({ products, totalPages, hasNext, hasPrev });
   } catch (err) {
+    console.log(err);
     return res.status(404).send(err);
   }
 });
@@ -76,7 +85,7 @@ router.put("/:id", async (req, res) => {
       },
       { new: true }
     );
-
+    console.log(product);
     res.send(product);
   } catch (err) {
     console.log(err);

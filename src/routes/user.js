@@ -11,16 +11,23 @@ const router = new express.Router();
 router.get("/", verifyTokenAndAdmin, async (req, res) => {
   try {
     const query = req.query.new;
-    const qLimit = req.query.limit ? Number(req.query.limit) : 10;
-    const qPage = req.query.page ? Number(req.query.page) : 1;
-    const toSkip = (qPage - 1) * qLimit;
+    let qLimit = req.query.limit ? Number(req.query.limit) : 10;
+    let qPage = req.query.page ? Number(req.query.page) : 1;
+    let toSkip = (qPage - 1) * qLimit;
 
-    const users = query
-      ? await User.find().sort({ createdAt: -1 }).limit(qLimit).skip(toSkip)
-      : await User.find();
+    let schema = User.find().sort({ ...(query && { createdAt: -1 }) });
+    let c = schema.toConstructor();
 
-    res.status(200).json(users);
+    const count = await schema.count();
+    const totalPages = Math.ceil(count / qLimit);
+    const hasNext = qPage < totalPages;
+    const hasPrev = qPage > 1;
+
+    const users = await c().limit(qLimit).skip(toSkip);
+
+    res.send({ users, totalPages, hasNext, hasPrev });
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
   }
 });
@@ -77,6 +84,7 @@ router.put("/:id", verifyTokenAndAuthenticate, async (req, res) => {
     "firstName",
     "lastName",
     "email",
+    "image",
     "username",
     "password",
   ];
@@ -86,7 +94,7 @@ router.put("/:id", verifyTokenAndAuthenticate, async (req, res) => {
   });
 
   if (!isValidOperation) {
-    return res.status(400).send({ error: "Invalid updates!" });
+    return res.status(400).send({ message: "Invalid updates!" });
   }
 
   try {
@@ -101,7 +109,7 @@ router.put("/:id", verifyTokenAndAuthenticate, async (req, res) => {
     res.send(user);
   } catch (err) {
     console.log(err);
-    res.status(404).send("Not Found");
+    res.status(404).send({ message: "Not Found" });
   }
 });
 
