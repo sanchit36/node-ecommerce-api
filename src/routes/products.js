@@ -63,11 +63,12 @@ router.get("/", async (req, res) => {
 });
 
 // Get Single Product
-router.get("/:id", async (req, res) => {
+router.get("/:slug", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const slug = req.params.slug;
+    const product = await Product.findOne({ slug });
     if (!product) {
-      res.status(404).send("Not Found");
+      return res.status(404).send("NO PRODUCT");
     }
     res.send(product);
   } catch (err) {

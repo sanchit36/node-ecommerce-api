@@ -7,19 +7,17 @@ const verifyToken = async (req, res, next) => {
     if (!tokenHeader) {
       throw new Error();
     }
-    const token = tokenHeader.replace("Bearer ", "");
-    const decoded = jwt.decode(token, process.env.JWT_SECRET);
 
-    const user = await User.findOne({
-      _id: decoded._id,
-      "tokens.token": token,
-    });
+    const token = tokenHeader.split(" ")[1];
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findOne({ _id: payload._id });
 
     if (!user) {
       throw new Error();
     }
 
-    req.id = decoded._id;
+    req.id = payload._id;
     req.token = token;
     req.user = user;
     next();

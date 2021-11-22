@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
 const UserSchema = mongoose.Schema(
@@ -53,14 +52,14 @@ const UserSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    tokens: [
-      {
-        token: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -78,46 +77,42 @@ UserSchema.virtual("cart", {
   foreignField: "user",
 });
 
+// TO JSON method will send the userObject to frontend
 UserSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject({ virtuals: true });
 
   delete userObject.password;
-  delete userObject.tokens;
   delete userObject.__v;
   delete userObject._id;
 
   return userObject;
 };
 
-UserSchema.methods.generateAuthToken = async function () {
+// revoking the refresh token for a user
+UserSchema.methods.revokeRefreshToken = async function () {
   const user = this;
-  const token = await jwt.sign(
-    { _id: user._id.toString() },
-    process.env.JWT_SECRET
-  );
-
-  user.tokens = user.tokens.concat({ token });
+  user.tokenVersion += 1;
   await user.save();
-
-  return token;
 };
 
+// find a user with the email and password
 UserSchema.statics.findByCredentials = async function (email, password) {
   const user = await User.findOne({ email }).populate("cart");
 
   if (!user) {
-    throw new Error("Invaild email or password");
+    throw new Error("Invalid email or password");
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw new Error("Invaild email or password");
+    throw new Error("Invalid email or password");
   }
 
   return user;
 };
 
+// Hash password before saving it
 UserSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("password")) {
@@ -126,6 +121,7 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
+// give custom error on unique parameters
 UserSchema.post("save", (error, doc, next) => {
   if (error?.keyPattern?.username && error.code === 11000) {
     next(new Error("Username already in use"));

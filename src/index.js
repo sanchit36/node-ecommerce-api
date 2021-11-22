@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 // Routes
 const authRoutes = require("./routes/auth");
@@ -18,8 +19,14 @@ mongoose
   .catch((err) => console.log(err));
 
 // app config
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productsRoutes);
@@ -27,10 +34,8 @@ app.use("/api/carts", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/checkout", stripeRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Hello world!");
-});
+const PORT = process.env.PORT;
 
-app.listen(process.env.PORT || 5000, () => {
-  console.log("listening on port " + process.env.PORT || 5000);
+app.listen(PORT, () => {
+  console.log("listening on port " + PORT);
 });

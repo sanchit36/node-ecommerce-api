@@ -60,7 +60,7 @@ const ProductSchema = mongoose.Schema(
 );
 
 ProductSchema.pre("save", function (next) {
-  this.slug = slugify(this.title);
+  this.slug = slugify(this.title.toLowerCase());
   next();
 });
 
