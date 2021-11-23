@@ -12,7 +12,7 @@ router.post("/", verifyToken, async (req, res) => {
     const savedOrder = await newOrder.save();
     res.status(200).json(savedOrder);
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -28,7 +28,7 @@ router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
     );
     res.status(200).json(updatedOrder);
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -38,7 +38,7 @@ router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
     await Order.findByIdAndDelete(req.params.id);
     res.status(200).json("Order has been deleted...");
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -48,18 +48,39 @@ router.get("/find/:userId", verifyTokenAndAuthenticate, async (req, res) => {
     const orders = await Order.find({ userId: req.params.userId });
     res.status(200).json(orders);
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
-// //GET ALL
+// GET ORDER
+router.get("/:id", verifyTokenAndAuthenticate, async (req, res) => {
+  try {
+    const orders = await Order.findById(req.params.id).populate("user").exec();
+
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+//GET ALL
 
 router.get("/", verifyTokenAndAdmin, async (req, res) => {
   try {
-    const orders = await Order.find();
-    res.status(200).json(orders);
+    let qLimit = req.query.limit ? Number(req.query.limit) : 10;
+    let qPage = req.query.page ? Number(req.query.page) : 1;
+    let toSkip = (qPage - 1) * qLimit;
+
+    let schema = Order.find();
+    let c = schema.toConstructor();
+
+    const count = await schema.count();
+    const totalPages = Math.ceil(count / qLimit);
+    const orders = await c().limit(qLimit).skip(toSkip);
+
+    res.status(200).json({ orders, totalPages });
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -95,7 +116,7 @@ router.get("/income", verifyTokenAndAdmin, async (req, res) => {
     ]);
     res.status(200).json(income);
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json({ message: err.message });
   }
 });
 
